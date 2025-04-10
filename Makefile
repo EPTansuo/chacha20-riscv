@@ -73,8 +73,10 @@ run: xs-emu chacha20_baremetal-$(BENCH_LEN).bin
 run_direct:
 	./xs-emu -i ./chacha20_baremetal-$(BENCH_LEN).bin --no-diff 2>/dev/null
 
-bin: chacha20_baremetal-$(BENCH_LEN).bin
+bin: clean clean_asm chacha20_baremetal-$(BENCH_LEN).bin
 
+clean_asm:
+	rm ./src/chacha20.s
 
 XSPython:
 	wget https://github.com/OpenXiangShan/XSPdb/releases/download/v0.1.0-test/XSPython-1f23fd0f5.tar.gz -O - | tar -zxvf -
