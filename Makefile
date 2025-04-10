@@ -1,5 +1,5 @@
 CROSS_COMPILE := riscv64-linux-gnu-
-LOADER := qemu-riscv64-static
+LOADER := qemu-riscv64
 CROSS_CC := $(CROSS_COMPILE)gcc
 CROSS_LD := $(CROSS_COMPILE)ld
 CROSS_OBJCOPY := $(CROSS_COMPILE)objcopy
@@ -69,6 +69,12 @@ validate-rtl: xs-emu chacha20_baremetal-$(BENCH_LEN).bin answer/$(BENCH_LEN).txt
 
 run: xs-emu chacha20_baremetal-$(BENCH_LEN).bin
 	./xs-emu -i ./chacha20_baremetal-$(BENCH_LEN).bin --no-diff 2>/dev/null
+
+run_direct:
+	./xs-emu -i ./chacha20_baremetal-$(BENCH_LEN).bin --no-diff 2>/dev/null
+
+bin: chacha20_baremetal-$(BENCH_LEN).bin
+
 
 XSPython:
 	wget https://github.com/OpenXiangShan/XSPdb/releases/download/v0.1.0-test/XSPython-1f23fd0f5.tar.gz -O - | tar -zxvf -
