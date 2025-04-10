@@ -385,9 +385,9 @@ chacha20:
 	sw	a0,56(sp)	# ret, x[14]
 	sw	s1,36(sp)	# x_I_lsm.11, x[9]
 	sw	t2,16(sp)	# ret, x[4]
-# src/chacha20.c:70:          asm volatile(
+# src/chacha20.c:72:     asm volatile(
 #APP
-# 70 "src/chacha20.c" 1
+# 72 "src/chacha20.c" 1
 	vsetivli t0, 16, e32, m4, ta, ma
 vle32.v v0, (sp)	#
 vle32.v v4, (a1)	# input
@@ -395,7 +395,7 @@ vadd.vv v8, v0, v4
 vse32.v v8, (s8)	# output
 
 # 0 "" 2
-# src/chacha20.c:85: }
+# src/chacha20.c:87: }
 #NO_APP
 	ld	s0,152(sp)		#,
 	.cfi_restore 8
