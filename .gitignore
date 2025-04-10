@@ -6,3 +6,6 @@ chacha20_linux*
 xs-emu
 XSPython
 *.json
+xspdb
+*.log
+

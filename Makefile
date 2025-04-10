@@ -94,3 +94,9 @@ debug: xspdb-depends chacha20_baremetal-$(BENCH_LEN).bin
 	@echo "type command xui to enter XSPython interactive mode"
 	@echo "type help for help"
 	. xspdb/bin/activate && python3 xspdb.py chacha20_baremetal-$(BENCH_LEN).bin
+
+debug_direct:
+	. xspdb/bin/activate && python3 xspdb.py chacha20_baremetal-$(BENCH_LEN).bin
+
+qemu_debug: chacha20_linux-$(BENCH_LEN)
+	@$(LOADER) -g 1234 ./chacha20_linux-$(BENCH_LEN)

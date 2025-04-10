@@ -61,25 +61,25 @@ x[c] += x[d], x[b] = ROTATE((x[b] ^ x[c]), 7)  )
     va = __riscv_vadd_vv_u32m4(va, vb, vl);           \
     /* d ^= a; d = ROTATE(d, 16) */                   \
     vd = __riscv_vror_vx_u32m4(                       \
-        __riscv_vxor_vv_u32m4(vd, va, vl), 16, vl);   \
+        __riscv_vxor_vv_u32m4(vd, va, vl), 32-16, vl);   \
 /***************************************************/ \
     /* c += d */                                      \
     vc = __riscv_vadd_vv_u32m4(vc, vd, vl);           \
     /* b ^= c; b = ROTATE(b, 12) */                   \
     vb = __riscv_vror_vx_u32m4(                       \
-        __riscv_vxor_vv_u32m4(vb, vc, vl), 12, vl);   \
+        __riscv_vxor_vv_u32m4(vb, vc, vl), 32-12, vl);   \
 /***************************************************/ \
     /* a += b */                                      \
     va = __riscv_vadd_vv_u32m4(va, vb, vl);           \
     /* d ^= a; d = ROTATE(d, 8) */                    \
     vd = __riscv_vror_vx_u32m4(                       \
-        __riscv_vxor_vv_u32m4(vd, va, vl), 8, vl);    \
+        __riscv_vxor_vv_u32m4(vd, va, vl), 32-8, vl);    \
 /***************************************************/ \
     /* c += d */                                      \
     vc = __riscv_vadd_vv_u32m4(vc, vd, vl);           \
     /* b ^= c; b = ROTATE(b, 7) */                    \
     vb = __riscv_vror_vx_u32m4(                       \
-        __riscv_vxor_vv_u32m4(vb, vc, vl), 7, vl);    \
+        __riscv_vxor_vv_u32m4(vb, vc, vl), 32-7, vl);    \
 } while(0)
 
 
@@ -108,17 +108,24 @@ void chacha20(chacha_buf *output, const u32 input[16]){
     // for(i=0; i < 8; i++)
     //     ((u64*)x)[i] = ((u64*)input)[i];
 
-    for(i=0; i<16; i++){
-        x[i] = input[i];
-    }
+    // for(i=0; i<16; i++){
+    //     x[i] = input[i];
+    // }
 
-    // size_t vl = __riscv_vsetvl_e32m4(4);
+    size_t vl = __riscv_vsetvl_e32m4(4);
     
-    // vuint32m4_t va = __riscv_vle32_v_u32m4(&input[0],  vl);  // x0-x3
-    // vuint32m4_t vb = __riscv_vle32_v_u32m4(&input[4],  vl);  // x4-x7
-    // vuint32m4_t vc = __riscv_vle32_v_u32m4(&input[8],  vl);  // x8-x11
-    // vuint32m4_t vd = __riscv_vle32_v_u32m4(&input[12], vl); // x12-x15
+    vuint32m4_t va = __riscv_vle32_v_u32m4(&input[0],  vl);  // x0-x3
+    vuint32m4_t vb = __riscv_vle32_v_u32m4(&input[4],  vl);  // x4-x7
+    vuint32m4_t vc = __riscv_vle32_v_u32m4(&input[8],  vl);  // x8-x11
+    vuint32m4_t vd = __riscv_vle32_v_u32m4(&input[12], vl); // x12-x15
     
+    // asm volatile(
+    //     "vsetivli t0, 4, e32, m4, ta, ma\n"
+    //     "vle32.v v0, (%[input])\n"    // v4 = input[0..3]
+    //     "vle32.v v4, 16(%[input])\n"  // v8 = input[4..7]
+    //     "vle32.v v8, 32(%[input])\n" // v12 = input[8..11]
+    //     "vle32.v v12, 48(%[input])\n" // v16 = input[12..15]
+    // );
 
     // __riscv_vse32_v_u32m4(x,    va, vl);
     // __riscv_vse32_v_u32m4(x+4,  vb, vl);
@@ -127,34 +134,48 @@ void chacha20(chacha_buf *output, const u32 input[16]){
 
 
     for (i = 0; i < 20; i+=2) {
-        QUARTERROUND(0, 4, 8, 12);
-        QUARTERROUND(1, 5, 9, 13);
-        QUARTERROUND(2, 6, 10, 14);
-        QUARTERROUND(3, 7, 11, 15);
+        // QUARTERROUND(0, 4, 8, 12);
+        // QUARTERROUND(1, 5, 9, 13);
+        // QUARTERROUND(2, 6, 10, 14);
+        // QUARTERROUND(3, 7, 11, 15);
 
-        // VECTOR_QUARTERROUND(va, vb, vc, vd, vl);
+        VECTOR_QUARTERROUND(va, vb, vc, vd, vl);
         
-        // VEC2X();
+        VEC2X();
  
         QUARTERROUND(0, 5, 10, 15);
         QUARTERROUND(1, 6, 11, 12);
         QUARTERROUND(2, 7, 8, 13);
         QUARTERROUND(3, 4, 9, 14);
 
-        
+
+
+        X2VEC();
     }
 
-    asm (
-        "vsetivli t0, 16, e32, m4, ta, ma\n" 
-        "vle32.v v0, (%[x])\n"
-        "vle32.v v4, (%[input])\n"
-        "vadd.vv v8, v0, v4\n"
-        "vse32.v v8, (%[output])\n"
-        : 
-        : [x] "r"(x),
-          [input] "r"(input),
-          [output] "r"(output->u)
-        : "t0", "v0", "v4", "v8", "memory"
-    );
+    const vuint32m4_t vinput0  = __riscv_vle32_v_u32m4(input,    vl);
+    const vuint32m4_t vinput4  = __riscv_vle32_v_u32m4(input+4,  vl);
+    const vuint32m4_t vinput8  = __riscv_vle32_v_u32m4(input+8,  vl);
+    const vuint32m4_t vinput12 = __riscv_vle32_v_u32m4(input+12, vl);
+    
+    __riscv_vse32_v_u32m4(&(output->u[0]),  __riscv_vadd_vv_u32m4(va, vinput0,  vl), vl);
+    __riscv_vse32_v_u32m4(&(output->u[4]),  __riscv_vadd_vv_u32m4(vb, vinput4,  vl), vl);
+    __riscv_vse32_v_u32m4(&(output->u[8]),  __riscv_vadd_vv_u32m4(vc, vinput8,  vl), vl);
+    __riscv_vse32_v_u32m4(&(output->u[12]), __riscv_vadd_vv_u32m4(vd, vinput12, vl), vl);
+
+
+
+    // asm (
+    //     "vsetivli t0, 16, e32, m4, ta, ma\n" 
+    //     "vle32.v v0, (%[x])\n"
+    //     "vle32.v v4, (%[input])\n"
+    //     "vadd.vv v8, v0, v4\n"
+    //     "vse32.v v8, (%[output])\n"
+    //     : 
+    //     : [x] "r"(x),
+    //       [input] "r"(input),
+    //       [output] "r"(output->u)
+    //     : "t0", "v0", "v4", "v8", "memory"
+    // );
 }
 
