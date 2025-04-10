@@ -4,7 +4,7 @@ CROSS_CC := $(CROSS_COMPILE)gcc
 CROSS_LD := $(CROSS_COMPILE)ld
 CROSS_OBJCOPY := $(CROSS_COMPILE)objcopy
 CFLAGS := -O3 -Ilib -Isrc -fno-builtin -static
-CROSS_CFLAGS := -march=rv64gcv -mabi=lp64d -mcmodel=medany
+CROSS_CFLAGS := -march=rv64gcv_zvbb_zbb_zbkb_zbc_zca_sstc_zicbom -mabi=lp64d -mcmodel=medany
 BAREMETAL_CFLAGS := -nostdlib
 BENCH_LEN := 32
 
