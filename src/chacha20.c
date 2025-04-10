@@ -11,6 +11,10 @@
 
 #include <chacha20.h>
 
+
+#define USE_VEC_ADD 1
+
+
 # define ROTATE(v, n) (((v) << (n)) | ((v) >> (32 - (n))))
 
 
@@ -68,7 +72,7 @@ void chacha20(chacha_buf *output, const u32 input[16])
         QUARTERROUND(3, 4, 9, 14);
     }
     
-    
+#ifdef USE_VEC_ADD
     asm volatile(
         "vsetivli t0, 16, e32, m4, ta, ma\n" 
         "vle32.v v0, (%[x])\n"
@@ -81,7 +85,8 @@ void chacha20(chacha_buf *output, const u32 input[16])
           [output] "r"(output->u)
         : "t0", "v0", "v4", "v8", "memory"
     );
-
-    // for (i = 0; i < 16; ++i)
-    //     output->u[i] = x[i] + input[i];
+#else 
+    for (i = 0; i < 16; ++i)
+        output->u[i] = x[i] + input[i];
+#endif 
 }
