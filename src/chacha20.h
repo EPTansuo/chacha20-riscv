@@ -3,7 +3,7 @@
 
 typedef unsigned int u32;
 typedef unsigned char u8;
-
+typedef unsigned long long u64;
 typedef union {
     u32 u[16];
     u8 c[64];
