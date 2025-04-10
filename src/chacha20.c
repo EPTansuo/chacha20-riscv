@@ -67,7 +67,21 @@ void chacha20(chacha_buf *output, const u32 input[16])
         QUARTERROUND(2, 7, 8, 13);
         QUARTERROUND(3, 4, 9, 14);
     }
+    
+    
+    asm volatile(
+        "vsetivli t0, 16, e32, m4, ta, ma\n" 
+        "vle32.v v0, (%[x])\n"
+        "vle32.v v4, (%[input])\n"
+        "vadd.vv v8, v0, v4\n"
+        "vse32.v v8, (%[output])\n"
+        : 
+        : [x] "r"(x),
+          [input] "r"(input),
+          [output] "r"(output->u)
+        : "t0", "v0", "v4", "v8", "memory"
+    );
 
-    for (i = 0; i < 16; ++i)
-        output->u[i] = x[i] + input[i];
+    // for (i = 0; i < 16; ++i)
+    //     output->u[i] = x[i] + input[i];
 }
