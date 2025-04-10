@@ -385,7 +385,7 @@ chacha20:
 	sw	a0,56(sp)	# ret, x[14]
 	sw	s1,36(sp)	# x_I_lsm.11, x[9]
 	sw	t2,16(sp)	# ret, x[4]
-# src/chacha20.c:147:     asm volatile(
+# src/chacha20.c:147:     asm (
 #APP
 # 147 "src/chacha20.c" 1
 	vsetivli t0, 16, e32, m4, ta, ma

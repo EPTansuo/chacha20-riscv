@@ -144,7 +144,7 @@ void chacha20(chacha_buf *output, const u32 input[16]){
         
     }
 
-    asm volatile(
+    asm (
         "vsetivli t0, 16, e32, m4, ta, ma\n" 
         "vle32.v v0, (%[x])\n"
         "vle32.v v4, (%[input])\n"
