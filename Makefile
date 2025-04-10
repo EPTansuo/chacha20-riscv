@@ -1,12 +1,12 @@
 CROSS_COMPILE := riscv64-linux-gnu-
-LOADER := qemu-riscv64
+LOADER := qemu-riscv64-static
 CROSS_CC := $(CROSS_COMPILE)gcc
 CROSS_LD := $(CROSS_COMPILE)ld
 CROSS_OBJCOPY := $(CROSS_COMPILE)objcopy
 CFLAGS := -O3 -Ilib -Isrc -fno-builtin -static
-CROSS_CFLAGS := -march=rv64gc -mcmodel=medany
+CROSS_CFLAGS := -march=rv64gcv -mabi=lp64d -mcmodel=medany
 BAREMETAL_CFLAGS := -nostdlib
-BENCH_LEN := 256
+BENCH_LEN := 32
 
 # CROSS_COMPILE linux
 chacha20_linux-$(BENCH_LEN): src/bench-$(BENCH_LEN).o src/chacha20.o lib/textio.o lib/uart_stdout.o
@@ -22,6 +22,9 @@ chacha20_baremetal-$(BENCH_LEN).bin: chacha20_baremetal-$(BENCH_LEN)
 # CROSS_COMPILE objs
 src/bench-$(BENCH_LEN).o: src/bench.c
 	$(CROSS_CC) $(CFLAGS) $(CROSS_CFLAGS) $(BAREMETAL_CFLAGS) -DBENCH_LEN=$(BENCH_LEN) -c -o $@ $^
+
+src/chacha20.s: src/chacha20.c
+	$(CROSS_CC) $(CFLAGS) $(CROSS_CFLAGS) $(BAREMETAL_CFLAGS) -S -fverbose-asm -o $@ $^
 
 src/chacha20.o: src/chacha20.s
 	$(CROSS_CC) $(CFLAGS) $(CROSS_CFLAGS) $(BAREMETAL_CFLAGS) -c -o $@ $^
