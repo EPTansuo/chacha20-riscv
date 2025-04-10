@@ -10,9 +10,11 @@
 /* Adapted from the public domain code by D. Bernstein from SUPERCOP. */
 
 #include <chacha20.h>
-
-
+#include <riscv_vector.h>
+#include <string.h>
+#if defined(__riscv_zbb) || defined(__riscv_zbkb) || defined(__riscv_v)
 #define USE_VEC_ADD 1
+#endif
 
 
 # define ROTATE(v, n) (((v) << (n)) | ((v) >> (32 - (n))))
@@ -52,14 +54,23 @@ x[c] += x[d], x[b] = ROTATE((x[b] ^ x[c]), 7)  )
 
 /* chacha_core performs 20 rounds of ChaCha on the input words in
  * |input| and writes the 64 output bytes to |output|. */
+//  __attribute__((optimize("unroll-loops")))
 void chacha20(chacha_buf *output, const u32 input[16])
 {
-    u32 x[16];
+    
+    u32 x[16] __attribute__((aligned(16)));
     int i;
 
     for (int i = 0; i < 16; i++) {
         x[i] = input[i];
     }
+    // memcpy(x, input, 4*16);
+    
+    
+    // vuint32m4_t vinput = __riscv_vle32_v_u32m4(input, 16);
+    // __riscv_vse32_v_u32m4(x, vinput , 16);
+    //
+
 
     for (i = 20; i > 0; i -= 2) {
         QUARTERROUND(0, 4, 8, 12);
