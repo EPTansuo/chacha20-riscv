@@ -103,7 +103,7 @@ x[c] += x[d], x[b] = ROTATE((x[b] ^ x[c]), 7)  )
 void chacha20(chacha_buf *output, const u32 input[16]){
     int i;
 
-    u32 x[16] __attribute__((aligned(16)));
+    // u32 x[16] __attribute__((aligned(16)));
 
     // for(i=0; i < 8; i++)
     //     ((u64*)x)[i] = ((u64*)input)[i];
@@ -133,6 +133,19 @@ void chacha20(chacha_buf *output, const u32 input[16]){
     // __riscv_vse32_v_u32m4(x+12, vd, vl);
 
 
+    const uint32_t idx1[4] = {1,2,3,0};
+    const uint32_t idx2[4] = {2,3,0,1};
+    const uint32_t idx3[4] = {3,0,1,2};
+    vuint32m4_t vidx1 = __riscv_vle32_v_u32m4(idx1, vl);
+    vuint32m4_t vidx2 = __riscv_vle32_v_u32m4(idx2, vl);
+    vuint32m4_t vidx3 = __riscv_vle32_v_u32m4(idx3, vl);
+
+    // const uint32_t revb[4] = {3,0,1,2};
+    // const uint32_t revc[4] = {3,3,0,1};
+    // const uint32_t revd[4] = {1,2,3,0};
+
+
+
     for (i = 0; i < 20; i+=2) {
         // QUARTERROUND(0, 4, 8, 12);
         // QUARTERROUND(1, 5, 9, 13);
@@ -141,16 +154,30 @@ void chacha20(chacha_buf *output, const u32 input[16]){
 
         VECTOR_QUARTERROUND(va, vb, vc, vd, vl);
         
-        VEC2X();
+        // VEC2X();
  
-        QUARTERROUND(0, 5, 10, 15);
-        QUARTERROUND(1, 6, 11, 12);
-        QUARTERROUND(2, 7, 8, 13);
-        QUARTERROUND(3, 4, 9, 14);
+    
+        vb = __riscv_vrgather_vv_u32m4(vb, vidx1, vl);
+        vc = __riscv_vrgather_vv_u32m4(vc, vidx2, vl);
+        vd = __riscv_vrgather_vv_u32m4(vd, vidx3, vl);
+        
+        
+        VECTOR_QUARTERROUND(va, vb, vc, vd, vl);
+
+        
+        vb = __riscv_vrgather_vv_u32m4(vb, vidx3, vl);
+        vc = __riscv_vrgather_vv_u32m4(vc, vidx2, vl);
+        vd = __riscv_vrgather_vv_u32m4(vd, vidx1, vl);
+
+
+        // QUARTERROUND(0, 5, 10, 15);
+        // QUARTERROUND(1, 6, 11, 12);
+        // QUARTERROUND(2, 7, 8, 13);
+        // QUARTERROUND(3, 4, 9, 14);
 
 
 
-        X2VEC();
+        // X2VEC();
     }
 
     const vuint32m4_t vinput0  = __riscv_vle32_v_u32m4(input,    vl);
